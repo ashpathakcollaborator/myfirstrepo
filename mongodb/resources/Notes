@@ -1,0 +1,113 @@
+Install the mongodb from the mongodb site, install mongosh separately if it is not included in the core installation
+
+Create symbolic link under /usr/local/bin, so that the mongo commands are available in terminal from any location
+  sudo ln -s  /path/to/the/mongodb-directory/bin/* /usr/local/bin/
+
+Create the data folder and the log folder in the mongodb dev workspace before running mongodb server
+
+Run the mongodb server
+  mongod --dbpath /Users/ashpathak/workspace/dev/mongodb/data/ --logpath /Users/ashpathak/workspace/dev/mongodb/logs/mongo.log
+
+Run the mongo shell
+  mongo
+
+  > use flights (this is a new database)
+
+  // INSERT
+  // flightdata is a new collection
+  > db.flightdata.insertOne({
+    "departureAirport": "MUC",
+    "arrivalAirport": "SFO",
+    "aircraft": "Airbus A380",
+    "distance": 12000,
+    "intercontinental": true
+  })
+
+  > db.flightdata.insertOne({
+    "departureAirport": "LHR",
+    "arrivalAirport": "TXL",
+    "aircraft": "Airbus A320",
+    "distance": 950,
+    "intercontinental": false,
+    "_id": "LHR-TXL-A320" 
+  })
+
+// INSERT MANY  
+// when inserting many, documents are given in an array 
+ > db.flightdata.insertMany([
+      {
+        "departureAirport": "MUC",
+        "arrivalAirport": "SFO",
+        "aircraft": "Airbus A380",
+        "distance": 12000,
+        "intercontinental": true
+      },
+      {
+        "departureAirport": "LHR",
+        "arrivalAirport": "TXL",
+        "aircraft": "Airbus A320",
+        "distance": 950,
+        "intercontinental": false
+      }
+    ])
+
+  // FIND
+  > db.flightdata.find()
+  > db.flightdata.find().pretty()
+  > db.flightdata.find({distance: 12000}) // filter
+  > db.flightdata.find({distance: {$gt: 11000}}) // filter condition
+  
+  // CURSOR
+  > db.passengers.find() // returns a cursor object, not all documents in the collection
+  > db.passengers.find().toArray() // returns the array, loads all documents in advance 
+  
+  // BUILT-IN METHOD (more efficient)
+  > db.passengers.find().forEach((data) => {printjson(data)}) // built-in forEach method that iterates through each document; you can write any other code on the document in the anonymous function 
+  
+  // UPDATE
+  > db.flightdata.updateOne({_id: "LHR-TXL-A320"}, {$set: {marker: "tobedeleted"}})
+  > db.flightdata.updateMany({}, {$set: {marker: "tobedeleted"}})
+
+  // DELETE
+  > db.flightdata.deleteOne({_id: ObjectId("64b5931e4ee67375be7a9923")})
+  > db.flightdata.deleteMany({_id: ObjectId("64b5931e4ee67375be7a9923")}, {_id: ObjectId("64b593644ee67375be7a9924")})
+  > db.flightdata.deleteMany({marker: "tobedeleted"})
+
+  // REPLACE
+  // replace the entire document with a new document
+  > db.flightdata.replaceOne({_id: ObjectId("64b5aa1d4ee67375be7a9926")}, {replaced: true})
+
+  // PROJECTION (returns only the specified values from the document)
+  > db.passengers.find({},{name: 1}) // returns only the name from the document, along with _id (by default)
+  > db.passengers.find({}, {name: 1, _id: 0}) // returns only the name, no _id is returned
+
+  // EMBEDDED DOCUMENTS (NESTED) -- up to 100 levels, each document up to 16 mb 
+  > db.flightdata.updateMany({}, {$set: {status: {description: "on-time", lastUpdatedOn: "1 hours ago"}}})
+
+  // ACCESS EMBEDDED DOCUMENTS
+  > db.flightdata.find({"status.description": "on-time"})
+  > db.flightdata.find({"status.description": "on-time"}, {status: 1, _id: 0})
+
+  // ARRAYS
+  > db.flightdata.updateOne({name: "Albert Twostone"}, {$set: {hobbies: ["cooking", "music", "soccer"]}})
+
+  // ACCESS ARRAYS
+  > db.passengers.findOne({name: "Albert Twostone"}).hobbies
+
+  // DROP COLLECTION
+  > db.flightdata.drop()
+  
+  // DROP DATABASE
+  > db.dropDatabase() // drops the database that you are in
+
+  // Data modelling 
+  > use geography
+
+  // Using Documents as Reference
+  > db.cities.insertMany([{_id: "NYC", name: "New York City"},{_id: "CHI", name: "Chicago"}]) 
+  > db.citizens.insertMany([{_id: "ap", name: "ash pathak", city: "NYC"},{_id: "sp", name: "shray pathak", city: "CHI"}])
+  > db.citizens.findOne({_id: "sp"}).name // returns "shray pathak"
+  > db.citizens.findOne({_id: "sp"}).city // returns "Chicago"
+  
+  // Using Embedded Documents
+  > 
